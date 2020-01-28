@@ -334,7 +334,7 @@ def learn(env,
 
         num_episodes = len(episode_rewards)
         elapsed_time = timedelta(time() - start)
-        if (done and print_freq is not None and len(episode_rewards) % print_freq == 0) or t % 50000 == 0:
+        if done and print_freq is not None and len(episode_rewards) > 0 and len(episode_rewards) % print_freq == 0:
             logger.record_tabular("steps", t)
             logger.record_tabular("episodes", num_episodes)
             logger.record_tabular("mean 100 episode reward", np.mean(episode_rewards))
