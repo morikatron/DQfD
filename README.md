@@ -12,3 +12,31 @@ This code is based off of code from OpenAI baselines. The original code and rela
 を参照してください。
 
 # 使い方
+clone git
+```python:
+git clone 
+```
+
+create conda virtual env and activate
+```python:
+conda create -n venv
+conda activate venv
+```
+
+install requirements
+```python:
+pip install tensorflow=2.0
+pip install tqdm
+pip install gym
+pip install gym[atari]
+```
+
+make demonstrations
+```python:
+python make_demo.py --env=MontezumaRevengeNoFrameskip-v4
+```
+
+run training
+```python:
+python run_atari.py
+```
