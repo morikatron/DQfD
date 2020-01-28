@@ -200,12 +200,13 @@ class PlayPlot(object):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--env', type=str, default='MontezumaRevengeNoFrameskip-v4', help='Define Environment')
+    parser.add_argument('--fps', type=int, default=20, help='Game fps')
     args = parser.parse_args()
     dir_path = "data/demo"
-    taskName = "human_right." + args.env + ".pkl"
+    taskName = "human." + args.env + ".pkl"
     env = make_env(args.env, "atari", wrapper_kwargs={'frame_stack': True})
     #env = gym.make(args.env)
-    trajectories = play(env, zoom=4, fps=15)
+    trajectories = play(env, zoom=4, fps=args.fps)
     print("num episodes", len(trajectories))
     os.makedirs(dir_path, exist_ok=True)
     with open(os.path.join(dir_path, taskName), mode="wb") as f:

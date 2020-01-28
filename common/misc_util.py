@@ -26,7 +26,7 @@ def set_global_seeds(i):
 
 def timedelta(seconds):
     """
-    reference: https://qiita.com/mitama/items/7726ff2ecd80f3b10648
+    from: https://qiita.com/mitama/items/7726ff2ecd80f3b10648
     秒数が1秒未満の場合はミリ秒を、1秒以上の場合はhh:mm:ssの形式に変換する"""
     if seconds < 1:
         return f"{seconds*1000:.0f} ms"

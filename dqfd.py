@@ -45,7 +45,7 @@ def learn(env,
           exploration_final_eps=0.01,
           train_freq=1,
           batch_size=32,
-          print_freq=100,
+          print_freq=10000,
           checkpoint_freq=10000,
           checkpoint_path=None,
           learning_starts=1000,
@@ -171,7 +171,7 @@ def learn(env,
             ckpt.restore(manager.checkpoints[load_idx])
             print("Restoring from {}".format(manager.checkpoints[load_idx]))
 
-    # setup demo trajectory
+    # Setup demo trajectory
     assert demo_path is not None
     with open(demo_path, "rb") as f:
         trajectories = pickle.load(f)
@@ -207,7 +207,6 @@ def learn(env,
     model.update_target()
 
     # ============================================== pre-training ======================================================
-    # 事前学習と探索はほとんど共通しているのでまとめた方が良いかも
     start = time()
     temp_buffer = deque(maxlen=n_step)  # reset temporary buffer
     for t in tqdm(range(pre_train_timesteps)):
@@ -232,7 +231,7 @@ def learn(env,
         # logging
         num_episodes = 0
         elapsed_time = timedelta(time() - start)
-        if print_freq is not None and t % 10000 == 0:
+        if print_freq is not None and t % print_freq == 0:
             logger.record_tabular("steps", t)
             logger.record_tabular("episodes", num_episodes)
             logger.record_tabular("mean 100 episode reward", 0)
