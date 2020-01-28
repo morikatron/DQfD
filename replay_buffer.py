@@ -27,8 +27,9 @@ class ReplayBuffer(object):
 
         if self._next_idx >= len(self._storage):
             self._storage.append(data)
-        elif self._storage[self._next_idx][5]:  # demoは残す:
-            self._next_idx = self.demo_len
+        else:
+            if self._storage[self._next_idx][5]:  # demoは残す
+                self._next_idx = self.demo_len
             self._storage[self._next_idx] = data
         self._next_idx = (self._next_idx + 1) % self._maxsize
 
