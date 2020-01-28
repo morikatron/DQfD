@@ -12,6 +12,7 @@ This code is based off of code from OpenAI baselines. The original code and rela
 を参照してください。
 
 # 使い方
+## Mac OS X
 clone git
 ```python:
 git clone 
