@@ -48,7 +48,7 @@ def main():
     parser.add_argument('--max_episode_steps', help='', type=int, default=1000)
     parser.add_argument('--network', help='', type=str, default='cnn')
     parser.add_argument('--save_path', help='Path to save trained model to', default='data/temp', type=str)
-    parser.add_argument('--load_path', help='Path to load trained model to', default=None, type=str)
+    parser.add_argument('--load_path', help='Path to load trained model to', default='data/temp', type=str)
     parser.add_argument('--save_video_interval', help='Save video every x steps (0 = disabled)', default=0, type=int)
     parser.add_argument('--save_video_length', help='Length of recorded video. Default: 2000', default=2000, type=int)
     parser.add_argument('--demo_path', help='Directory to save learning curve data.', default="data/demo/human.MontezumaRevengeNoFrameskip-v4.pkl", type=str)

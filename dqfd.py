@@ -46,7 +46,7 @@ def learn(env,
           train_freq=1,
           batch_size=32,
           print_freq=10000,
-          checkpoint_freq=10000,
+          checkpoint_freq=100000,
           checkpoint_path=None,
           learning_starts=1000,
           gamma=1.0,
@@ -196,6 +196,7 @@ def learn(env,
             else:
                 replay_buffer.demo_len += 1
                 replay_buffer.add(obs[0], action, rew, new_obs[0], float(done), float(is_demo))
+    logger.log("trajectory length:", replay_buffer.demo_len)
     # Create the schedule for exploration
     if epsilon_schedule == "constant":
         exploration = ConstantSchedule(exploration_final_eps)
@@ -296,11 +297,12 @@ def learn(env,
 
         this_episode_reward += np.sign(rew) * (np.exp(np.sign(rew) * rew) - 1.)  # 記録用にlogスケールを元に戻す
         if done:
+            num_episodes += 1
             obs = env.reset()
             obs = np.expand_dims(np.array(obs), axis=0)
             episode_rewards.append(this_episode_reward)
             reset = True
-            this_episode_reward = 0.
+            this_episode_reward = 0.0
 
         if t % train_freq == 0:
             # Minimize the error in Bellman's equation on a batch sampled from replay buffer.=============
@@ -334,7 +336,7 @@ def learn(env,
 
         num_episodes = len(episode_rewards)
         elapsed_time = timedelta(time() - start)
-        if done and print_freq is not None and len(episode_rewards) > 0 and len(episode_rewards) % print_freq == 0:
+        if done and num_episodes > 0 and num_episodes % print_freq == 0:
             logger.record_tabular("steps", t)
             logger.record_tabular("episodes", num_episodes)
             logger.record_tabular("mean 100 episode reward", np.mean(episode_rewards))
