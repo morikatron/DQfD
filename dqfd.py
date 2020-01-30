@@ -209,6 +209,7 @@ def learn(env,
 
     # ============================================== pre-training ======================================================
     start = time()
+    num_episodes = 0
     temp_buffer = deque(maxlen=n_step)  # reset temporary buffer
     for t in tqdm(range(pre_train_timesteps)):
         # sample and train
@@ -230,7 +231,6 @@ def learn(env,
             model.update_target()
 
         # logging
-        num_episodes = 0
         elapsed_time = timedelta(time() - start)
         if print_freq is not None and t % print_freq == 0:
             logger.record_tabular("steps", t)
@@ -334,7 +334,6 @@ def learn(env,
             manager.save(t)
             logger.log("saved checkpoint")
 
-        num_episodes = len(episode_rewards)
         elapsed_time = timedelta(time() - start)
         if done and num_episodes > 0 and num_episodes % print_freq == 0:
             logger.record_tabular("steps", t)
