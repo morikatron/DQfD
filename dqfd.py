@@ -40,17 +40,17 @@ def learn(env,
           seed=None,
           lr=1e-4,
           total_timesteps=100000,
-          buffer_size=50000,
+          buffer_size=500000,
           exploration_fraction=0.1,
           exploration_final_eps=0.01,
           train_freq=4,
           batch_size=32,
-          print_freq=10000,
+          print_freq=100,
           checkpoint_freq=100000,
           checkpoint_path=None,
           learning_starts=1000,
-          gamma=1.0,
-          target_network_update_freq=1000,
+          gamma=0.99,
+          target_network_update_freq=10000,
           prioritized_replay=True,
           prioritized_replay_alpha=0.4,
           prioritized_replay_beta0=0.6,
@@ -214,12 +214,13 @@ def learn(env,
     for t in tqdm(range(pre_train_timesteps)):
         # sample and train
         experience = replay_buffer.sample(batch_size, beta=prioritized_replay_beta0)
-        (obses_t, actions, rewards, obses_tp1, dones, is_demos, obses_tpn, rewards_n, dones_n, weights, batch_idxes) = experience
-        obses_t, obses_tp1 = tf.constant(obses_t), tf.constant(obses_tp1)
-        actions, rewards, dones, is_demos = tf.constant(actions), tf.constant(rewards), tf.constant(dones), tf.constant(is_demos)
-        weights = tf.constant(weights)
-        if obses_tpn is not None:
-            obses_tpn, rewards_n, dones_n = tf.constant(obses_tpn), tf.constant(rewards_n), tf.constant(dones_n)
+        batch_idxes = experience[-1]
+        if experience[6] is None:  # n_step = 0
+            obses_t, actions, rewards, obses_tp1, dones, is_demos = tuple(map(tf.constant, experience[:6]))
+            obses_tpn, rewards_n, dones_n = None, None, None
+            weights = tf.constant(experience[-2])
+        else:
+            obses_t, actions, rewards, obses_tp1, dones, is_demos, obses_tpn, rewards_n, dones_n, weights = tuple(map(tf.constant, experience[:-1]))
         td_errors, n_td_errors, loss_dq, loss_n, loss_E, loss_l2, weighted_error = model.train(obses_t, actions, rewards, obses_tp1, dones, is_demos, weights, obses_tpn, rewards_n, dones_n)
 
         # update priorities
@@ -232,7 +233,7 @@ def learn(env,
 
         # logging
         elapsed_time = timedelta(time() - start)
-        if print_freq is not None and t % print_freq == 0:
+        if print_freq is not None and t % 10000 == 0:
             logger.record_tabular("steps", t)
             logger.record_tabular("episodes", num_episodes)
             logger.record_tabular("mean 100 episode reward", 0)
@@ -306,13 +307,15 @@ def learn(env,
 
         if t % train_freq == 0:
             # Minimize the error in Bellman's equation on a batch sampled from replay buffer.=============
-            experience = replay_buffer.sample(batch_size, beta=beta_schedule.value(t))
-            (obses_t, actions, rewards, obses_tp1, dones, is_demos, obses_tpn, rewards_n, dones_n, weights, batch_idxes) = experience
-            obses_t, obses_tp1 = tf.constant(obses_t), tf.constant(obses_tp1)
-            actions, rewards, dones, is_demos = tf.constant(actions), tf.constant(rewards), tf.constant(dones), tf.constant(is_demos)
-            weights = tf.constant(weights)
-            if obses_tpn is not None:
-                obses_tpn, rewards_n, dones_n = tf.constant(obses_tpn), tf.constant(rewards_n), tf.constant(dones_n)
+            experience = replay_buffer.sample(batch_size, beta=prioritized_replay_beta0)
+            batch_idxes = experience[-1]
+            if experience[6] is None:  # n_step = 0
+                obses_t, actions, rewards, obses_tp1, dones, is_demos = tuple(map(tf.constant, experience[:6]))
+                obses_tpn, rewards_n, dones_n = None, None, None
+                weights = tf.constant(experience[-2])
+            else:
+                obses_t, actions, rewards, obses_tp1, dones, is_demos, obses_tpn, rewards_n, dones_n, weights = tuple(
+                    map(tf.constant, experience[:-1]))
             td_errors, n_td_errors, loss_dq, loss_n, loss_E, loss_l2, weighted_error = model.train(obses_t, actions, rewards, obses_tp1,
                                                                               dones, is_demos, weights, obses_tpn,
                                                                               rewards_n, dones_n)
