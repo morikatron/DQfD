@@ -120,7 +120,8 @@ def play(env, transpose=True, fps=30, zoom=None, callback=None, keys_to_action=N
             if len(episode_trajectory) > 0 and save_trajectory:
                 trajectories.append(episode_trajectory)
                 print("saved trajectory len", len(episode_trajectory))
-                episode_trajectory = []
+            print("reset! episode reward is", sum([epi[2] for epi in episode_trajectory]))
+            episode_trajectory = []
             save_trajectory = True
         else:
             action = keys_to_action.get(tuple(sorted(pressed_keys)), 0)
