@@ -5,9 +5,11 @@ This repo replicates the results Hester et al. obtained:
 This code is based on code from OpenAI baselines. The original code and related paper from OpenAI can be found [here](https://github.com/openai/baselines "here").
 
 このリポジトリはHesterらによるDeep Q-Learning from Demonstrations(DQfD)を再現実装したものです。
+
 アルゴリズムやハイパーパラメータなどはできる限り論文をもとにしていますが、完全に同じパフォーマンスを再現することはできません。
 
 このコードはOpenAI baselinesに基づいて実装されています。
+
 オリジナルのコードやそれに関連する論文については[こちら](https://github.com/openai/baselines "こちら")
 を参照してください。
 
@@ -15,14 +17,22 @@ This code is based on code from OpenAI baselines. The original code and related 
 
 # 環境のセットアップについて
 必要なライブラリは
+
 ・Tensorflow2(GPUを使用する場合tensorflow-gpu)
+
 ・gym
+
 ・gym[atari]
+
 ・tqdm
+
 です。
-GPUを使用しない場合はdqfd.pyの71行目を
+
+(GPUを使用しない場合はdqfd.pyの71行目を
+
 with tf.device('/GPU:0'): -> with tf.device('/CPU:0'):
-に書き換えてください。
+
+に書き換えてください。)
 
 ## Mac OS Xでのセットアップ例
 clone git
@@ -38,7 +48,8 @@ conda activate DQfDenv
 
 install requirements
 ```python:
-conda install tensorflow-gpu
+conda install tensorflow-2.0
+(conda install tensorflow-gpu)
 
 pip install gym
 pip install gym[atari]
