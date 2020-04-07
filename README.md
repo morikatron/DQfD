@@ -23,7 +23,7 @@ with tf.device('/GPU:0'):
 with tf.device('/CPU:0'):  
 と書き換えてください。)  
 <br/>
-## Mac OS Xでのセットアップ例
+## Ubuntu 18.04でのセットアップ例
 clone git
 ```python:
 git clone https://github.com/morikatron/DQfD.git
@@ -63,3 +63,11 @@ python run_atari.py
 Montezuma's Revengeでステージ1をクリアした5エピソード分のデモデータを以下のリンク先に置いておきます。(サイズが906MBと大きいので注意です)  
 https://drive.google.com/file/d/1bxfIkqxjiJKH9Pg2a8ZRMIheX7wypEJL/view?usp=sharing  
 リンク先のpklファイルをDQfD/data/demoディレクトリに配置することでデモを作成せずに学習を開始することができます。
+
+# Mac OSでエラーが出る場合
+Mac OSでOMP: Errorが出る場合、dqfd.pyの頭に  
+```python:
+import os
+os.environ['KMP_DUPLICATE_LIB_OK']='TRUE'
+```
+を加えてください。(他の解決方法をご存じであれば教えていただけるとありがたいです。)
