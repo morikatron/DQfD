@@ -10,7 +10,7 @@ This code is based on code from OpenAI baselines. The original code and related 
 オリジナルのコードやそれに関連する論文については[こちら](https://github.com/openai/baselines "こちら")を参照してください。  
 このアルゴリズムに関するブログはこちら[ブログのURL]を参照してください。  
 <br/>
-# 環境のセットアップについて
+## 環境のセットアップについて
 必要なライブラリは  
 ・Tensorflow2(GPUを使用する場合tensorflow-gpu)  
 ・gym  
@@ -23,7 +23,7 @@ with tf.device('/GPU:0'):
 with tf.device('/CPU:0'):  
 と書き換えてください。)  
 <br/>
-## Ubuntu 18.04でのセットアップ例
+### Ubuntu 18.04でのセットアップ例
 リポジトリをクローン
 ```python:
 git clone https://github.com/morikatron/DQfD.git
@@ -47,7 +47,7 @@ pip install tqdm
 ```
 
 
-# 使い方
+## 使い方
 まずmake_demo.pyを実行してデモを作成します。  
 作成したデモは./data/demoディレクトリに保存されます。  
 例
@@ -78,12 +78,12 @@ python run_atari.py  --pre_train_timesteps=1e6 --num_timesteps=1e7
 ```
 他のパラメータについてはrun_atari.pyのmain()関数をご確認ください。
 
-# デモデータ
+## デモデータ
 Montezuma's Revengeでステージ1をクリアした5エピソード分のデモデータを以下のリンク先に置いておきます。(サイズが906MBと大きいので注意です)  
 https://drive.google.com/file/d/1bxfIkqxjiJKH9Pg2a8ZRMIheX7wypEJL/view?usp=sharing  
 リンク先のpklファイルをDQfD/data/demoディレクトリに配置することでデモを作成せずに学習を開始することができます。
 
-# Mac OSでエラーが出る場合
+## Mac OSでエラーが出る場合
 Mac OSでOMP: Errorが出る場合、dqfd.pyの頭に  
 ```python:
 import os
