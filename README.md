@@ -4,9 +4,11 @@ This repo replicates the results Hester et al. obtained:
 
 This code is based on code from OpenAI baselines. The original code and related paper from OpenAI can be found [here](https://github.com/openai/baselines "here").
 
+
 このリポジトリはHesterらによるDeep Q-Learning from Demonstrations(DQfD)を再現実装したものです。
 
 アルゴリズムやハイパーパラメータなどはできる限り論文をもとにしていますが、完全に同じパフォーマンスを再現することはできません。
+
 
 このコードはOpenAI baselinesに基づいて実装されています。
 
@@ -14,6 +16,7 @@ This code is based on code from OpenAI baselines. The original code and related 
 を参照してください。
 
 このアルゴリズムに関するブログは[こちら]( "こちら")を参照してください。
+
 
 # 環境のセットアップについて
 必要なライブラリは
@@ -33,6 +36,7 @@ This code is based on code from OpenAI baselines. The original code and related 
 with tf.device('/GPU:0'): -> with tf.device('/CPU:0'):
 
 に書き換えてください。)
+
 
 ## Mac OS Xでのセットアップ例
 clone git
@@ -55,6 +59,7 @@ pip install gym
 pip install gym[atari]
 pip install tqdm
 ```
+
 
 # 使い方
 まずmake_demo.pyを実行してデモを作成します。
