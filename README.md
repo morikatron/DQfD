@@ -49,7 +49,7 @@ pip install tqdm
 
 # 使い方
 まずmake_demo.pyを実行してデモを作成します。  
-作成したデモは./data/demoディレクトリに保存されます。
+作成したデモは./data/demoディレクトリに保存されます。  
 例
 ```python:
 python make_demo.py --env=MontezumaRevengeNoFrameskip-v4
