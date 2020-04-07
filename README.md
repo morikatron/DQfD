@@ -42,22 +42,41 @@ conda install tensorflow-2.0
 
 pip install gym
 pip install gym[atari]
+(エラーが出る場合は pip install 'gym[atari]')
 pip install tqdm
 ```
 
 
 # 使い方
 まずmake_demo.pyを実行してデモを作成します。  
-作成したデモは./data/demoディレクトリに保存されます。  
+作成したデモは./data/demoディレクトリに保存されます。
 例
 ```python:
 python make_demo.py --env=MontezumaRevengeNoFrameskip-v4
 ```
-
+### 操作方法  
+・w,s,a,d：上下左右に移動  
+・SPACE：ジャンプ  
+・backspace：このエピソードの行動軌跡を保存せずリセット  
+・return：このエピソードの行動軌跡を保存してリセット  
+・esc：このエピソードの行動軌跡を保存せずゲームを終了  
+<br/>
 デモの作成が完了したらrun_atari.pyを実行して学習を開始します。  
 ```python:
 python run_atari.py
 ```
+### run_atari.pyの引数  
+コマンドライン引数で学習時の設定を指定することができます。  
+・env : 学習を行う環境(デフォルトはMontezumaRevengeNoFrameskip-v4 必ずデモの環境と同じものを指定してください)
+・pre_train_timesteps：事前学習を行うステップ数(デフォルトは75万)  
+・num_timesteps：(事前学習を除く)学習を行う総ステップ数(デフォルトは100万)  
+・demo_path：デモデータが保存してあるパス  
+・play：学習後にプレイを実行  
+例
+```python:
+python run_atari.py  --pre_train_timesteps=1e6 --num_timesteps=1e7 
+```
+他のパラメータについてはrun_atari.pyのmain()関数をご確認ください。
 
 # デモデータ
 Montezuma's Revengeでステージ1をクリアした5エピソード分のデモデータを以下のリンク先に置いておきます。(サイズが906MBと大きいので注意です)  
