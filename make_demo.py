@@ -1,3 +1,4 @@
+# This code is based on code from OpenAI gym. (https://github.com/openai/gym/blob/master/gym/utils/play.py)
 import gym
 import pygame
 import matplotlib
@@ -7,16 +8,10 @@ import pickle
 from gym import logger
 from run_atari import make_env
 import numpy as np
-from copy import deepcopy
 """
-reference: https://github.com/openai/gym/blob/master/gym/utils/play.py
-コマンドライン引数でenvを指定することができます。
-ゲーム中はエピソードごとに行動軌跡が保存されます。
-ゲームによってはfpsを変えた方が遊びやすいです。
-環境に学習用のラッパー(フレームをスタックしたりスキップしたり)を通しているのでカクカクしていて遊びづらいです。
-backspace:このエピソードの行動軌跡を保存せずエピソードをリセット
-return:このエピソードの行動軌跡を保存してエピソードをリセット
-esc:このエピソードの行動軌跡を保存せずゲームを終了
+backspace: このエピソードの行動軌跡を保存せずリセット(reset this episode without saving trajectories)
+return:    このエピソードの行動軌跡を保存してリセット(reset this episode with saving trajectories)
+esc:       このエピソードの行動軌跡を保存せずゲームを終了(quit game without saving trajectories)
 """
 
 try:
@@ -202,15 +197,15 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--env', type=str, default='MontezumaRevengeNoFrameskip-v4', help='Define Environment')
     parser.add_argument('--fps', type=int, default=20, help='Game fps')
+    parser.add_argument('--seed', type=int, default=None, help='Game seed')
     args = parser.parse_args()
     dir_path = "data/demo"
-    taskName = "human." + args.env + ".pkl"
-    env = make_env(args.env, "atari", wrapper_kwargs={'frame_stack': True})
-    #env = gym.make(args.env)
+    task_name = "human." + args.env + ".pkl"
+    env = make_env(args.env, seed=args.seed, wrapper_kwargs={'frame_stack': True})
     trajectories = play(env, zoom=4, fps=args.fps)
     print("num episodes", len(trajectories))
     os.makedirs(dir_path, exist_ok=True)
-    with open(os.path.join(dir_path, taskName), mode="wb") as f:
+    with open(os.path.join(dir_path, task_name), mode="wb") as f:
         pickle.dump(trajectories, f)
 
 

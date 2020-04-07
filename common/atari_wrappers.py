@@ -7,6 +7,7 @@ from gym import spaces
 import cv2
 cv2.ocl.setUseOpenCL(False)
 
+
 class TimeLimit(gym.Wrapper):
     def __init__(self, env, max_episode_steps=None):
         super(TimeLimit, self).__init__(env)
@@ -27,6 +28,7 @@ class TimeLimit(gym.Wrapper):
     def reset(self, **kwargs):
         self._elapsed_steps = 0
         return self.env.reset(**kwargs)
+
 
 class NoopResetEnv(gym.Wrapper):
     def __init__(self, env, noop_max=30):
@@ -57,6 +59,7 @@ class NoopResetEnv(gym.Wrapper):
     def step(self, ac):
         return self.env.step(ac)
 
+
 class FireResetEnv(gym.Wrapper):
     def __init__(self, env):
         """Take action on reset for environments that are fixed until firing."""
@@ -77,6 +80,7 @@ class FireResetEnv(gym.Wrapper):
     def step(self, ac):
         return self.env.step(ac)
 
+
 class EpisodicLifeEnv(gym.Wrapper):
     def __init__(self, env):
         """Make end-of-life == end-of-episode, but only reset on true game over.
@@ -84,7 +88,7 @@ class EpisodicLifeEnv(gym.Wrapper):
         """
         gym.Wrapper.__init__(self, env)
         self.lives = 0
-        self.was_real_done  = True
+        self.was_real_done = True
 
     def step(self, action):
         obs, reward, done, info = self.env.step(action)
@@ -112,6 +116,7 @@ class EpisodicLifeEnv(gym.Wrapper):
             obs, _, _, _ = self.env.step(0)
         self.lives = self.env.unwrapped.ale.lives()
         return obs
+
 
 class MaxAndSkipEnv(gym.Wrapper):
     def __init__(self, env, skip=4):
@@ -141,6 +146,7 @@ class MaxAndSkipEnv(gym.Wrapper):
     def reset(self, **kwargs):
         return self.env.reset(**kwargs)
 
+
 class ClipRewardEnv(gym.RewardWrapper):
     def __init__(self, env):
         gym.RewardWrapper.__init__(self, env)
@@ -149,13 +155,23 @@ class ClipRewardEnv(gym.RewardWrapper):
         """Bin reward to {+1, 0, -1} by its sign."""
         return np.sign(reward)
 
+
 class LogRewardEnv(gym.RewardWrapper):
+    def __init__(self, env):
+        gym.RewardWrapper.__init__(self, env)
+
+    def reward(self, reward):
+        return np.sign(reward) * np.log(1.0 + abs(reward))
+
+
+class RewardEnv(gym.RewardWrapper):
     def __init__(self, env):
         gym.RewardWrapper.__init__(self, env)
 
     def reward(self, reward):
         """Bin reward to {+1, 0, -1} by its sign."""
         return np.sign(reward) * np.log(1.0 + abs(reward))
+
 
 class WarpFrame(gym.ObservationWrapper):
     def __init__(self, env, width=84, height=84, grayscale=True, dict_space_key=None):
@@ -211,6 +227,18 @@ class WarpFrame(gym.ObservationWrapper):
         return obs
 
 
+class MaskLives(gym.ObservationWrapper):
+    """
+    This wrapper is only for Montezuma's Revenge.
+    """
+    def __init__(self, env):
+        super().__init__(env)
+
+    def observation(self, obs):
+        obs[14:21, :, :] = 0
+        return obs
+
+
 class FrameStack(gym.Wrapper):
     def __init__(self, env, k):
         """Stack k last frames.
@@ -242,6 +270,40 @@ class FrameStack(gym.Wrapper):
         assert len(self.frames) == self.k
         return LazyFrames(list(self.frames))
 
+
+class CoarseFrameStack(gym.Wrapper):
+    def __init__(self, env, k, n=4):
+        """Stack k last frames.
+        every n steps frame stack for
+        this pre-processing didn't work at all
+        """
+        gym.Wrapper.__init__(self, env)
+        self.k = k
+        self.n = n
+        self.num_step = 0
+        self.frames = deque([], maxlen=k)
+        shp = env.observation_space.shape
+        self.observation_space = spaces.Box(low=0, high=255, shape=(shp[:-1] + (shp[-1] * k,)), dtype=env.observation_space.dtype)
+
+    def reset(self):
+        self.num_step = 0
+        ob = self.env.reset()
+        for _ in range(self.k):
+            self.frames.append(ob)
+        return self._get_ob()
+
+    def step(self, action):
+        ob, reward, done, info = self.env.step(action)
+        if self.num_step % self.n == 0:
+            self.frames.append(ob)
+        self.num_step += 1
+        return self._get_ob(), reward, done, info
+
+    def _get_ob(self):
+        assert len(self.frames) == self.k
+        return LazyFrames(list(self.frames))
+
+
 class ScaledFloatFrame(gym.ObservationWrapper):
     def __init__(self, env):
         gym.ObservationWrapper.__init__(self, env)
@@ -251,6 +313,7 @@ class ScaledFloatFrame(gym.ObservationWrapper):
         # careful! This undoes the memory optimization, use
         # with smaller replay buffers only.
         return np.array(observation).astype(np.float32) / 255.0
+
 
 class LazyFrames(object):
     def __init__(self, frames):
@@ -289,6 +352,7 @@ class LazyFrames(object):
     def frame(self, i):
         return self._force()[..., i]
 
+
 def make_atari(env_id, max_episode_steps=None):
     env = gym.make(env_id)
     assert 'NoFrameskip' in env.spec.id
@@ -298,6 +362,7 @@ def make_atari(env_id, max_episode_steps=None):
         env = TimeLimit(env, max_episode_steps=max_episode_steps)
     return env
 
+
 def wrap_deepmind(env, episode_life=False, clip_rewards=False, frame_stack=False, scale=False, log_rewards=True):
     """Configure environment for DeepMind-style Atari.
     """
@@ -305,6 +370,8 @@ def wrap_deepmind(env, episode_life=False, clip_rewards=False, frame_stack=False
         env = EpisodicLifeEnv(env)
     if 'FIRE' in env.unwrapped.get_action_meanings():
         env = FireResetEnv(env)
+    if env.spec.id == 'MontezumaRevengeNoFrameskip-v4':
+        env = MaskLives(env)
     env = WarpFrame(env)
     if scale:
         env = ScaledFloatFrame(env)
@@ -314,4 +381,9 @@ def wrap_deepmind(env, episode_life=False, clip_rewards=False, frame_stack=False
         env = LogRewardEnv(env)
     if frame_stack:
         env = FrameStack(env, 4)
+    """
+    # didn't work at all :(
+    if coarse_frame_stack:
+        env = CoarseFrameStack(env, 4, 4)
+    """
     return env

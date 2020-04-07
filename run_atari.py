@@ -45,7 +45,7 @@ def main():
     parser.add_argument('--seed', help='RNG seed', type=int, default=None)
     parser.add_argument('--num_timesteps', help='', type=float, default=1e6)
     parser.add_argument('--pre_train_timesteps', help='', type=float, default=750000)
-    parser.add_argument('--max_episode_steps', help='', type=int, default=1000)
+    parser.add_argument('--max_episode_steps', help='', type=int, default=10000)
     parser.add_argument('--network', help='', type=str, default='cnn')
     parser.add_argument('--save_path', help='Path to save trained model to', default='data/temp', type=str)
     parser.add_argument('--load_path', help='Path to load trained model to', default='data/temp', type=str)

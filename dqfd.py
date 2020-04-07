@@ -1,3 +1,4 @@
+# This code is based on code from OpenAI baselines. (https://github.com/openai/baselines)
 import os.path as osp
 from tqdm import tqdm
 from time import time
@@ -17,38 +18,34 @@ from dqfd_learner import DQfD
 
 
 def get_n_step_sample(buffer, gamma):
-    """
-    N ステップ分の割引報酬和を計算してから行動軌跡をリプレイバッファに保存するための関数です。
-    割引報酬和は前のステップの計算結果から再帰的に計算するやりかたの方が速そうなのですが、誤差が増幅してうまく行かなかったので普通に計算しています。
-    """
     reward_n = 0
     for i, step in enumerate(buffer):
         reward_n += step[2] * (gamma ** i)
-    obs     = buffer[0][0]
-    action  = buffer[0][1]
-    rew     = buffer[0][2]
-    new_obs = buffer[0][3]
-    done    = buffer[0][4]
-    is_demo = buffer[0][5]
+    obs        = buffer[0][0]
+    action     = buffer[0][1]
+    rew        = buffer[0][2]
+    new_obs    = buffer[0][3]
+    done       = buffer[0][4]
+    is_demo    = buffer[0][5]
     n_step_obs = buffer[-1][3]
-    done_n  = buffer[-1][4]
+    done_n     = buffer[-1][4]
     return obs[0], action, rew, new_obs[0], float(done), float(is_demo), n_step_obs[0], reward_n, done_n
 
 
 def learn(env,
           network,
           seed=None,
-          lr=1e-4,
+          lr=5e-5,
           total_timesteps=100000,
           buffer_size=500000,
           exploration_fraction=0.1,
           exploration_final_eps=0.01,
-          train_freq=4,
+          train_freq=1,
           batch_size=32,
-          print_freq=100,
+          print_freq=10,
           checkpoint_freq=100000,
           checkpoint_path=None,
-          learning_starts=1000,
+          learning_starts=0,
           gamma=0.99,
           target_network_update_freq=10000,
           prioritized_replay=True,
@@ -60,106 +57,29 @@ def learn(env,
           callback=None,
           load_path=None,
           load_idx=None,
-          # dqfd
           demo_path=None,
           n_step=10,
-          demo_prioritized_replay_eps=1.,
+          demo_prioritized_replay_eps=1.0,
           pre_train_timesteps=750000,
           epsilon_schedule="constant",
           **network_kwargs
-            ):
-    """dqfdのモデルを学習します.
-
-    Parameters
-    -------
-    env: gyn.Env
-        学習する環境
-    network: string or a function
-        関数近似に用いるニューラルネット。stringの場合はcommon.modelsに登録されたモデル(mlp, cnn, conv_only)。
-    seed: int or None
-        同じシード値は同じ学習結果を与える「はず」です。
-    lr: float
-        Adam optimizerの学習率
-    total_timesteps: int
-        学習する環境の総ステップ数(事前学習のステップ数は含みません)
-    buffer_size: int
-        リプレイバッファのサイズ
-    exploration_fraction: float
-        ε-greedyのεを減少させる期間(dqfdの場合はεは0.01に固定)
-    exploration_final_eps: float
-        ε-greedyのεの最終値
-    train_freq: int
-        学習を行う頻度
-    batch_size: int
-        バッチサイズ
-    print_freq: int
-        how often to print out training progress
-        set to None to disable printing
-    checkpoint_freq: int
-        how often to save the model. This is so that the best version is restored
-        at the end of the training. If you do not wish to restore the best version at
-        the end of the training set this variable to None.
-    checkpoint_path: str
-        path to save the model to.
-    learning_starts: int
-        how many steps of the model to collect transitions for before learning starts
-    gamma: float
-        discount factor
-    target_network_update_freq: int
-        update the target network every `target_network_update_freq` steps.
-    prioritized_replay: True
-        if True prioritized replay buffer will be used.
-    prioritized_replay_alpha: float
-        alpha parameter for prioritized replay buffer
-    prioritized_replay_beta0: float
-        initial value of beta for prioritized replay buffer
-    prioritized_replay_beta_iters: int
-        number of iterations over which beta will be annealed from initial value
-        to 1.0. If set to None equals to total_timesteps.
-    prioritized_replay_eps: float
-        epsilon to add to the TD errors when updating priorities.
-    param_noise: bool
-        whether or not to use parameter space noise (https://arxiv.org/abs/1706.01905)
-    callback: (locals, globals) -> None
-        function called at every steps with state of the algorithm.
-        If callback returns true training stops.
-    load_path: str
-        path to load the model from. (default: None)
-    demo_path: str
-        path to load the demo from. (default: None)
-    n_step: int
-        number of steps for calculating N step TD error
-    demo_prioritized_replay_eps: float
-        epsilon to add to the TD errors when updating priorities of demo.
-    pre_train_timesteps: int
-        number of pre-training steps to using demo
-    epsilon_schedule:str
-        epsilon-greedy schedule (default:constant)
-    **network_kwargs
-        additional keyword arguments to pass to the network builder.
-    Returns
-    -------
-    act: ActWrapper
-        Wrapper over act function. Adds ability to save it and load it.
-        See header of baselines/deepq/categorical.py for details on the act function.
-    """
+          ):
     # Create all the functions necessary to train the model
     set_global_seeds(seed)
     q_func = build_q_func(network, **network_kwargs)
 
-    # capture the shape outside the closure so that the env object is not serialized
-    # by cloudpickle when serializing make_obs_ph
+    with tf.device('/GPU:0'):
+        model = DQfD(
+            q_func=q_func,
+            observation_shape=env.observation_space.shape,
+            num_actions=env.action_space.n,
+            lr=lr,
+            grad_norm_clipping=10,
+            gamma=gamma,
+            param_noise=param_noise
+        )
 
-    model = DQfD(
-        q_func=q_func,
-        observation_shape=env.observation_space.shape,
-        num_actions=env.action_space.n,
-        lr=lr,
-        grad_norm_clipping=10,
-        gamma=gamma,
-        param_noise=param_noise
-    )
-
+    # Load model from checkpoint
     if load_path is not None:
         load_path = osp.expanduser(load_path)
         ckpt = tf.train.Checkpoint(model=model)
@@ -175,6 +95,7 @@ def learn(env,
     assert demo_path is not None
     with open(demo_path, "rb") as f:
         trajectories = pickle.load(f)
+
     # Create the replay buffer
     replay_buffer = PrioritizedReplayBuffer(buffer_size, prioritized_replay_alpha)
     if prioritized_replay_beta_iters is None:
@@ -200,7 +121,7 @@ def learn(env,
     # Create the schedule for exploration
     if epsilon_schedule == "constant":
         exploration = ConstantSchedule(exploration_final_eps)
-    else:
+    else:  # not used
         exploration = LinearSchedule(schedule_timesteps=int(exploration_fraction * total_timesteps),
                                      initial_p=1.0,
                                      final_p=exploration_final_eps)
@@ -210,12 +131,12 @@ def learn(env,
     # ============================================== pre-training ======================================================
     start = time()
     num_episodes = 0
-    temp_buffer = deque(maxlen=n_step)  # reset temporary buffer
+    temp_buffer = deque(maxlen=n_step)
     for t in tqdm(range(pre_train_timesteps)):
         # sample and train
         experience = replay_buffer.sample(batch_size, beta=prioritized_replay_beta0)
         batch_idxes = experience[-1]
-        if experience[6] is None:  # n_step = 0
+        if experience[6] is None:  # for n_step = 0
             obses_t, actions, rewards, obses_tp1, dones, is_demos = tuple(map(tf.constant, experience[:6]))
             obses_tpn, rewards_n, dones_n = None, None, None
             weights = tf.constant(experience[-2])
@@ -223,15 +144,15 @@ def learn(env,
             obses_t, actions, rewards, obses_tp1, dones, is_demos, obses_tpn, rewards_n, dones_n, weights = tuple(map(tf.constant, experience[:-1]))
         td_errors, n_td_errors, loss_dq, loss_n, loss_E, loss_l2, weighted_error = model.train(obses_t, actions, rewards, obses_tp1, dones, is_demos, weights, obses_tpn, rewards_n, dones_n)
 
-        # update priorities
+        # Update priorities
         new_priorities = np.abs(td_errors) + np.abs(n_td_errors) + demo_prioritized_replay_eps
         replay_buffer.update_priorities(batch_idxes, new_priorities)
 
-        # Update target network periodically.
+        # Update target network periodically
         if t > 0 and t % target_network_update_freq == 0:
             model.update_target()
 
-        # logging
+        # Logging
         elapsed_time = timedelta(time() - start)
         if print_freq is not None and t % 10000 == 0:
             logger.record_tabular("steps", t)
@@ -256,10 +177,11 @@ def learn(env,
     demo_used_counts = 0
     episode_rewards = deque(maxlen=100)
     this_episode_reward = 0.
+    best_score = 0.
     saved_mean_reward = None
     is_demo = False
     obs = env.reset()
-    # always mimic the vectorized env
+    # Always mimic the vectorized env
     obs = np.expand_dims(np.array(obs), axis=0)
     reset = True
     for t in tqdm(range(total_timesteps)):
@@ -270,12 +192,8 @@ def learn(env,
         if not param_noise:
             update_eps = tf.constant(exploration.value(t))
             update_param_noise_threshold = 0.
-        else:
+        else:  # not used
             update_eps = tf.constant(0.)
-            # Compute the threshold such that the KL divergence between perturbed and non-perturbed
-            # policy is comparable to eps-greedy exploration with eps = exploration.value(t).
-            # See Appendix C.1 in Parameter Space Noise for Exploration, Plappert et al., 2017
-            # for detailed explanation.
             update_param_noise_threshold = -np.log(1. - exploration.value(t) + exploration.value(t) / float(env.action_space.n))
             kwargs['reset'] = reset
             kwargs['update_param_noise_threshold'] = update_param_noise_threshold
@@ -296,20 +214,26 @@ def learn(env,
             replay_buffer.add(obs[0], action, rew, new_obs[0], float(done), 0.)
         obs = new_obs
 
-        this_episode_reward += np.sign(rew) * (np.exp(np.sign(rew) * rew) - 1.)  # 記録用にlogスケールを元に戻す
+        # invert log scaled score for logging
+        this_episode_reward += np.sign(rew) * (np.exp(np.sign(rew) * rew) - 1.)
         if done:
             num_episodes += 1
             obs = env.reset()
             obs = np.expand_dims(np.array(obs), axis=0)
             episode_rewards.append(this_episode_reward)
             reset = True
+            if this_episode_reward > best_score:
+                best_score = this_episode_reward
+                ckpt = tf.train.Checkpoint(model=model)
+                manager = tf.train.CheckpointManager(ckpt, './best_model', max_to_keep=1)
+                manager.save(t)
+                logger.log("saved best model")
             this_episode_reward = 0.0
 
         if t % train_freq == 0:
-            # Minimize the error in Bellman's equation on a batch sampled from replay buffer.=============
-            experience = replay_buffer.sample(batch_size, beta=prioritized_replay_beta0)
+            experience = replay_buffer.sample(batch_size, beta=beta_schedule.value(t))
             batch_idxes = experience[-1]
-            if experience[6] is None:  # n_step = 0
+            if experience[6] is None:  # for n_step = 0
                 obses_t, actions, rewards, obses_tp1, dones, is_demos = tuple(map(tf.constant, experience[:6]))
                 obses_tpn, rewards_n, dones_n = None, None, None
                 weights = tf.constant(experience[-2])
@@ -322,7 +246,7 @@ def learn(env,
             new_priorities = np.abs(td_errors) + np.abs(n_td_errors) + demo_prioritized_replay_eps * is_demos + prioritized_replay_eps * (1. - is_demos)
             replay_buffer.update_priorities(batch_idxes, new_priorities)
 
-            # ログ用
+            # for logging
             sample_counts += batch_size
             demo_used_counts += np.sum(is_demos)
 
@@ -355,8 +279,8 @@ def learn(env,
             logger.record_tabular("pre_train", False)
             logger.record_tabular("elapsed time", elapsed_time)
             logger.dump_tabular()
-    return model
 
+    return model
 
 
 

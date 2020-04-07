@@ -1,99 +1,4 @@
-"""Deep Q model
-
-The functions in this model:
-
-======= step ========
-
-    Function to chose an action given an observation
-
-    Parameters
-    ----------
-    observation: tensor
-        Observation that can be feed into the output of make_obs_ph
-    stochastic: bool
-        if set to False all the actions are always deterministic (default False)
-    update_eps: float
-        update epsilon a new value, if negative not update happens
-        (default: no update)
-
-    Returns
-    -------
-    Tensor of dtype tf.int64 and shape (BATCH_SIZE,) with an action to be performed for
-    every element of the batch.
-
-
-(NOT IMPLEMENTED YET)
-======= step (in case of parameter noise) ========
-
-    Function to chose an action given an observation
-
-    Parameters
-    ----------
-    observation: object
-        Observation that can be feed into the output of make_obs_ph
-    stochastic: bool
-        if set to False all the actions are always deterministic (default False)
-    update_eps: float
-        update epsilon to a new value, if negative no update happens
-        (default: no update)
-    reset: bool
-        reset the perturbed policy by sampling a new perturbation
-    update_param_noise_threshold: float
-        the desired threshold for the difference between non-perturbed and perturbed policy
-    update_param_noise_scale: bool
-        whether or not to update the scale of the noise for the next time it is re-perturbed
-
-    Returns
-    -------
-    Tensor of dtype tf.int64 and shape (BATCH_SIZE,) with an action to be performed for
-    every element of the batch.
-
-
-======= train =======
-
-    Function that takes a transition (s,a,r,s',d) and optimizes Bellman equation's error:
-
-        td_error = Q(s,a) - (r + gamma * (1-d) * max_a' Q(s', a'))
-        loss = huber_loss[td_error]
-
-    Parameters
-    ----------
-    obs_t: object
-        a batch of observations
-    action: np.array
-        actions that were selected upon seeing obs_t.
-        dtype must be int32 and shape must be (batch_size,)
-    reward: np.array
-        immediate reward attained after executing those actions
-        dtype must be float32 and shape must be (batch_size,)
-    obs_tp1: object
-        observations that followed obs_t
-    done: np.array
-        1 if obs_t was the last observation in the episode and 0 otherwise
-        obs_tp1 gets ignored, but must be of the valid shape.
-        dtype must be float32 and shape must be (batch_size,)
-    weight: np.array
-        imporance weights for every element of the batch (gradient is multiplied
-        by the importance weight) dtype must be float32 and shape must be (batch_size,)
-
-    Returns
-    -------
-    td_error: np.array
-        a list of differences between Q(s,a) and the target in Bellman's equation.
-        dtype is float32 and shape is (batch_size,)
-
-======= update_target ========
-
-    copy the parameters from optimized Q function to the target Q function.
-    In Q learning we actually optimize the following error:
-
-        Q(s,a) - (r + gamma * max_a' Q'(s', a'))
-
-    Where Q' is lagging behind Q to stablize the learning. For example for Atari
-
-    Q' is set to Q once every 10000 updates training steps.
-
-"""
+# This code is based on code from OpenAI baselines. (https://github.com/openai/baselines)
 import tensorflow as tf
 
 
@@ -204,7 +109,7 @@ class DQfD(tf.Module):
             q_tpn_best_masked = (1.0 - dones_n) * q_tpn_best
 
             q_tn_selected_target = rewards_n + (self.gamma ** self.n_step) * q_tpn_best_masked
-            n_td_error = q_t_selected - tf.stop_gradient(q_tn_selected_target)
+            n_td_error = (q_t_selected - tf.stop_gradient(q_tn_selected_target))* tf.cast(is_demos, q_tp1_best.dtype)
             loss_n = self.lambda1 * huber_loss(n_td_error)
         else:
             loss_n = tf.constant(0.)
@@ -218,7 +123,7 @@ class DQfD(tf.Module):
         # ==========L2 loss=========
         loss_l2 = self.lambda3 * tf.reduce_sum([tf.reduce_sum(tf.square(variables)) for variables in self.q_network.trainable_variables])
 
-        all_loss = loss_n + loss_dq + loss_E  # + loss_l2 ?
+        all_loss = loss_n + loss_dq + loss_E
         weighted_error = tf.reduce_mean(importance_weights * all_loss) + loss_l2
 
       grads = tape.gradient(weighted_error, self.q_network.trainable_variables)
@@ -234,7 +139,10 @@ class DQfD(tf.Module):
 
     @tf.function(autograph=False)
     def update_target(self):
-      q_vars = self.q_network.trainable_variables
-      target_q_vars = self.target_q_network.trainable_variables
-      for var, var_target in zip(q_vars, target_q_vars):
-        var_target.assign(var)
+
+        q_vars = self.q_network.trainable_variables
+        target_q_vars = self.target_q_network.trainable_variables
+        for var, var_target in zip(q_vars, target_q_vars):
+            var_target.assign(var)
+        print("target network update")
+
