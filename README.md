@@ -67,7 +67,7 @@ python run_atari.py
 ```
 ### run_atari.pyの引数  
 コマンドライン引数で学習時の設定を指定することができます。  
-・env : 学習を行う環境(デフォルトはMontezumaRevengeNoFrameskip-v4 必ずデモの環境と同じものを指定してください)
+・env : 学習を行う環境(デフォルトはMontezumaRevengeNoFrameskip-v4 必ずデモの環境と同じものを指定してください)  
 ・pre_train_timesteps：事前学習を行うステップ数(デフォルトは75万)  
 ・num_timesteps：(事前学習を除く)学習を行う総ステップ数(デフォルトは100万)  
 ・demo_path：デモデータが保存してあるパス  
