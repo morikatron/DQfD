@@ -56,3 +56,8 @@ python make_demo.py --env=MontezumaRevengeNoFrameskip-v4
 ```python:
 python run_atari.py
 ```
+
+# デモデータ
+Montezuma's Revengeでステージ1をクリアした5エピソード分のデモデータを以下のリンク先に置いておきます。(サイズが906MBと大きいので注意です)  
+https://drive.google.com/file/d/1bxfIkqxjiJKH9Pg2a8ZRMIheX7wypEJL/view?usp=sharing
+リンク先のpklファイルをDQfD/data/demoディレクトリに配置することでデモを作成せずに学習を開始することができます。
