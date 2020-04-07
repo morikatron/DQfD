@@ -17,9 +17,11 @@ This code is based on code from OpenAI baselines. The original code and related 
 ・gym[atari]  
 ・tqdm  
 です。  
-(GPUを使用しない場合はdqfd.pyの71行目を  
-with tf.device('/GPU:0'): -> with tf.device('/CPU:0'):  
-に書き換えてください。)  
+(GPUを使用しない場合はdqfd.pyの71行目  
+with tf.device('/GPU:0'):  
+を  
+with tf.device('/CPU:0'):  
+と書き換えてください。)  
 <br/>
 ## Mac OS Xでのセットアップ例
 clone git
