@@ -8,7 +8,7 @@ This code is based on code from OpenAI baselines. The original code and related 
 <br/>
 このコードはOpenAI baselinesに基づいて実装されています。  
 オリジナルのコードやそれに関連する論文については[こちら](https://github.com/openai/baselines "こちら")を参照してください。  
-このアルゴリズムに関するブログは[こちら]( "こちら")を参照してください。  
+このアルゴリズムに関するブログはこちら[ブログのURL]を参照してください。  
 <br/>
 # 環境のセットアップについて
 必要なライブラリは  
