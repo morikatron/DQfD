@@ -24,18 +24,18 @@ with tf.device('/CPU:0'):
 と書き換えてください。)  
 <br/>
 ## Ubuntu 18.04でのセットアップ例
-clone git
+リポジトリをクローン
 ```python:
 git clone https://github.com/morikatron/DQfD.git
 ```
 
-create conda virtual env and activate
+仮想環境を作成してアクティベート
 ```python:
 conda create -n DQfDenv
 conda activate DQfDenv
 ```
 
-install requirements
+必要なライブラリをインストール
 ```python:
 conda install tensorflow-2.0
 (conda install tensorflow-gpu)
