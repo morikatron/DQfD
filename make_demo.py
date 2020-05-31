@@ -147,8 +147,11 @@ def play(env, transpose=True, fps=30, zoom=None, callback=None, keys_to_action=N
                     running = False
                 elif event.key == pygame.K_KP_PLUS:
                     fps *= 2
+                    print(f"fps: {fps}")
                 elif event.key == pygame.K_KP_MINUS:
                     fps /= 2
+                    print(f"fps: {fps}")
+
             elif event.type == pygame.KEYUP:
                 if event.key in relevant_keys:
                     pressed_keys.remove(event.key)
@@ -210,9 +213,10 @@ def main():
     env = make_env(args.env, seed=args.seed, wrapper_kwargs={'frame_stack': True})
     trajectories = play(env, zoom=4, fps=args.fps)
     print("num episodes", len(trajectories))
-    os.makedirs(dir_path, exist_ok=True)
-    with open(os.path.join(dir_path, task_name), mode="wb") as f:
-        pickle.dump(trajectories, f)
+    if len(trajectories) != 0:
+        os.makedirs(dir_path, exist_ok=True)
+        with open(os.path.join(dir_path, task_name), mode="wb") as f:
+            pickle.dump(trajectories, f)
 
 if __name__ == '__main__':
     main()
