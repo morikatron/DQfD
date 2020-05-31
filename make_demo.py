@@ -12,6 +12,8 @@ import numpy as np
 backspace: このエピソードの行動軌跡を保存せずリセット(reset this episode without saving trajectories)
 return:    このエピソードの行動軌跡を保存してリセット(reset this episode with saving trajectories)
 esc:       このエピソードの行動軌跡を保存せずゲームを終了(quit game without saving trajectories)
+keypad plus: increase game's speed
+keypad minus: decrease game's speed
 """
 
 try:
@@ -143,6 +145,10 @@ def play(env, transpose=True, fps=30, zoom=None, callback=None, keys_to_action=N
                     env_done = True
                 elif event.key == pygame.K_ESCAPE:
                     running = False
+                elif event.key == pygame.K_KP_PLUS:
+                    fps *= 2
+                elif event.key == pygame.K_KP_MINUS:
+                    fps /= 2
             elif event.type == pygame.KEYUP:
                 if event.key in relevant_keys:
                     pressed_keys.remove(event.key)
@@ -207,7 +213,6 @@ def main():
     os.makedirs(dir_path, exist_ok=True)
     with open(os.path.join(dir_path, task_name), mode="wb") as f:
         pickle.dump(trajectories, f)
-
 
 if __name__ == '__main__':
     main()
