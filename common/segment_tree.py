@@ -102,32 +102,63 @@ class SumSegmentTree(SegmentTree):
         """Returns arr[start] + ... + arr[end]"""
         return super(SumSegmentTree, self).reduce(start, end)
 
-    def find_prefixsum_idx(self, prefixsum):
-        """Find the highest index `i` in the array such that
-            sum(arr[0] + arr[1] + ... + arr[i - i]) <= prefixsum
+    # def find_prefixsum_idx(self, prefixsum):
+    #     """Find the highest index `i` in the array such that
+    #         sum(arr[0] + arr[1] + ... + arr[i - i]) <= prefixsum
+    #
+    #     if array values are probabilities, this function
+    #     allows to sample indexes according to the discrete
+    #     probability efficiently.
+    #
+    #     Parameters
+    #     ----------
+    #     perfixsum: float
+    #         upperbound on the sum of array prefix
+    #
+    #     Returns
+    #     -------
+    #     idx: int
+    #         highest index satisfying the prefixsum constraint
+    #     """
+    #     assert 0 <= prefixsum <= self.sum() + 1e-5
+    #     idx = 1
+    #     while idx < self._capacity:  # while non-leaf
+    #         if self._value[2 * idx] > prefixsum:
+    #             idx = 2 * idx
+    #         else:
+    #             prefixsum -= self._value[2 * idx]
+    #             idx = 2 * idx + 1
+    #     return idx - self._capacity
 
+    def find_prefixsum_idx(self, prefixsum):
+        """
+        Find the highest index `i` in the array such that
+            sum(arr[0] + arr[1] + ... + arr[i - i]) <= prefixsum for each entry in prefixsum
         if array values are probabilities, this function
         allows to sample indexes according to the discrete
         probability efficiently.
-
-        Parameters
-        ----------
-        perfixsum: float
-            upperbound on the sum of array prefix
-
-        Returns
-        -------
-        idx: int
-            highest index satisfying the prefixsum constraint
+        :param prefixsum: (np.ndarray) float upper bounds on the sum of array prefix
+        :return: (np.ndarray) highest indexes satisfying the prefixsum constraint
         """
-        assert 0 <= prefixsum <= self.sum() + 1e-5
-        idx = 1
-        while idx < self._capacity:  # while non-leaf
-            if self._value[2 * idx] > prefixsum:
-                idx = 2 * idx
-            else:
-                prefixsum -= self._value[2 * idx]
-                idx = 2 * idx + 1
+        if isinstance(prefixsum, float):
+            prefixsum = np.array([prefixsum])
+        assert 0 <= np.min(prefixsum)
+        assert np.max(prefixsum) <= self.sum() + 1e-5
+        assert isinstance(prefixsum[0], float)
+
+        idx = np.ones(len(prefixsum), dtype=int)
+        cont = np.ones(len(prefixsum), dtype=bool)
+
+        while np.any(cont):  # while not all nodes are leafs
+            idx[cont] = 2 * idx[cont]
+            prefixsum_new = np.where(self._value[idx] <= prefixsum, prefixsum - self._value[idx], prefixsum)
+            # prepare update of prefixsum for all right children
+            idx = np.where(np.logical_or(self._value[idx] > prefixsum, np.logical_not(cont)), idx, idx + 1)
+            # Select child node for non-leaf nodes
+            prefixsum = prefixsum_new
+            # update prefixsum
+            cont = idx < self._capacity
+            # collect leafs
         return idx - self._capacity
 
 
