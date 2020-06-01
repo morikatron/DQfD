@@ -2,7 +2,7 @@
 import numpy as np
 import random
 
-from common.segment_tree import SumSegmentTree, MinSegmentTree
+from common.segment_tree_sb import SumSegmentTree, MinSegmentTree
 
 
 class ReplayBuffer(object):
@@ -143,6 +143,7 @@ class PrioritizedReplayBuffer(ReplayBuffer):
         max_weight = (p_min * len(self._storage)) ** (-beta)
         p_sample = self._it_sum[idxes] / self._it_sum.sum()
         weights = (p_sample * len(self._storage)) ** (-beta) / max_weight
+        weights = np.array(weights, dtype=np.float32)
         encoded_sample = self._encode_sample(idxes)
         return tuple(list(encoded_sample) + [weights, idxes])
 
@@ -168,7 +169,7 @@ class PrioritizedReplayBuffer(ReplayBuffer):
         assert len(idxes) == len(priorities)
         assert np.min(priorities) > 0
         assert np.min(idxes) >= 0
-        assert np.max(idxes) < len(self.storage)
+        assert np.max(idxes) < len(self._storage)
         self._it_sum[idxes] = priorities ** self._alpha
         self._it_min[idxes] = priorities ** self._alpha
 

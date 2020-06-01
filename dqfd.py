@@ -32,7 +32,7 @@ def get_n_step_sample(buffer, gamma):
     done_n     = buffer[-1][4]
     return obs[0], action, rew, new_obs[0], float(done), float(is_demo), n_step_obs[0], reward_n, done_n
 
-@profile
+
 def learn(env,
           network,
           seed=None,
