@@ -11,8 +11,8 @@ from common.schedules import LinearSchedule, ConstantSchedule
 from common.misc_util import set_global_seeds, timedelta
 from common import logger
 
-# from replay_buffer import PrioritizedReplayBuffer
-from stable_baselines.common.buffers import PrioritizedReplayBuffer
+from replay_buffer import PrioritizedReplayBuffer
+# from stable_baselines.common.buffers import PrioritizedReplayBuffer
 
 from models import build_q_func
 from dqfd_learner import DQfD
@@ -32,7 +32,7 @@ def get_n_step_sample(buffer, gamma):
     done_n     = buffer[-1][4]
     return obs[0], action, rew, new_obs[0], float(done), float(is_demo), n_step_obs[0], reward_n, done_n
 
-
+@profile
 def learn(env,
           network,
           seed=None,
