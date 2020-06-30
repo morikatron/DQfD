@@ -10,62 +10,78 @@ This code is based on code from OpenAI baselines. The original code and related 
 オリジナルのコードやそれに関連する論文については[こちら](https://github.com/openai/baselines "こちら")を参照してください。  
 このアルゴリズムに関するブログは[こちら](https://tech.morikatron.ai/entry/2020/04/15/100000)を参照してください。  
 <br/>
-## 環境のセットアップについて
-必要なライブラリは  
-・Tensorflow2(GPUを使用する場合tensorflow-gpu)  
+## Requirements
+・Python3
+・tensorflow2(or tensorflow-gpu)  
 ・gym  
 ・gym[atari]  
 ・tqdm  
-です。  
-(GPUを使用しない場合はdqfd.pyの71行目  
+(when you don't use gpu, please rewrite line 71 on dqfd.py  
 with tf.device('/GPU:0'):  
-を  
+to  
 with tf.device('/CPU:0'):  
-と書き換えてください。)  
+)  
 <br/>
-### Ubuntu 18.04でのセットアップ例
-リポジトリをクローン
+### Usage(Ubuntu 18.04)
+ - clone this repo
 ```python:
 git clone https://github.com/morikatron/DQfD.git
 ```
+<br/>
 
-仮想環境を作成してアクティベート
+ - activate virtual environment(if needed)  
+ 
+conda  
 ```python:
 conda create -n DQfDenv
 conda activate DQfDenv
 ```
+venv
+```python:
+python3 -m venv DQfDenv
+source DQfDenv/bin/activate
+```
+<br/>
 
-必要なライブラリをインストール
+ - install packages
+(example for conda environment)
 ```python:
 conda install tensorflow-2.0
 (conda install tensorflow-gpu)
 
 pip install gym
 pip install gym[atari]
-(エラーが出る場合は pip install 'gym[atari]')
+(If you get an error, try pip install 'gym[atari]')
 pip install tqdm
 ```
+<br/>
 
-
-## 使い方
-まずmake_demo.pyを実行してデモを作成します。  
-作成したデモは./data/demoディレクトリに保存されます。  
-例
+ - create demo
+Demo trajectories are needed to train agent.  
+(example for Montezuma's Revenge demo)
 ```python:
 python make_demo.py --env=MontezumaRevengeNoFrameskip-v4
 ```
-### 操作方法  
-・w,s,a,d：上下左右に移動  
-・SPACE：ジャンプ  
-・backspace：このエピソードの行動軌跡を保存せずリセット  
-・return：このエピソードの行動軌跡を保存してリセット  
-・esc：このエピソードの行動軌跡を保存せずゲームを終了  
+Created trajectories are saved to ./data/demo directory.  
 <br/>
-デモの作成が完了したらrun_atari.pyを実行して学習を開始します。  
+
+ - Start training
 ```python:
 python run_atari.py
 ```
-### run_atari.pyの引数  
+<br/>
+
+### how to operate a demo
+・w,s,a,d：move up, down, left, right  
+・SPACE：jump  
+・backspace：reset this episode without saving this episode's trajectory  
+・return：reset this episode saving this episode's trajectory  
+・esc：quit game without saving this episode's trajectory  
+・plus: speed up(doubles fps)  
+・minus: speed down(halves fps)
+<br/>
+
+### command-line options of run_atari.py  
 コマンドライン引数で学習時の設定を指定することができます。  
 ・env : 学習を行う環境(デフォルトはMontezumaRevengeNoFrameskip-v4 必ずデモの環境と同じものを指定してください)  
 ・pre_train_timesteps：事前学習を行うステップ数(デフォルトは75万)  
