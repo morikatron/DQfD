@@ -1,4 +1,5 @@
 # Replication of DQfD(Deep Q-Learning from Demonstrations)
+![montezuma_result](https://github.com/morikatron/DQfD/blob/master/assets/montezuma.gif "montezuma_result")
 This repo replicates the results Hester et al. obtained:
 [Deep Q-Learning from Demonstraitions](https://arxiv.org/abs/1704.03732 "Deep Q-Learning from Demonstraitions")  
 This code is based on code from OpenAI baselines. The original code and related paper from OpenAI can be found [here](https://github.com/openai/baselines "here").  
